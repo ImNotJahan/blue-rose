@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+
+<html>
+	<body>
+		<canvas id="canvas" width="640" height="360" style="border:1px solid #000000;"></canvas>
+	</body>
+</html>
+
+<script>
+	/*
+	Facing | North: 0, East: 1, South: 2, West: 3
+	*/
+
+	// References
+	const canvas = document.getElementById("canvas");
+	const ctx = canvas.getContext("2d");
+	
+	// Temporary storage
+	const room = {facing:0, id:"start"};
+	let player = {inventory:[]};
+	
+	// Images
+	let background = new Image();
+	background.src = "images/backgrounds/" + room.id + room.facing + ".png";
+	
+	background.onload = function() { ctx.drawImage(background, 0, 0); };
+</script>
+
+<style>
+	body {
+		background-color: black;
+	}
+	
+	#canvas {
+		padding: 0;
+		margin: auto;
+		display: block;
+		width: 640px;
+		height: 360px;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+	}
+</style>
