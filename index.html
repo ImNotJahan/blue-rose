@@ -3,6 +3,7 @@
 <html>
 	<body>
 		<canvas id="canvas" width="640" height="360" style="border:1px solid #000000;"></canvas>
+		<button onclick="openFullscreen()">Fullscreen</button>
 	</body>
 </html>
 
@@ -13,7 +14,8 @@
 
 	// References
 	const canvas = document.getElementById("canvas");
-	let ctx = canvas.getContext("2d");
+	const ctx = canvas.getContext("2d");
+	ctx.imageSmoothingEnabled = false; // Since a bit pixelated, this looks better
 	
 	// Events
 	function getCursorPosition(canvas, event) {
@@ -49,7 +51,11 @@
 	let rightArrow = new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
 	
 	let smallWindow = new RoomComponent(100, 75, "images/objects/window", 270, 120, 1, "start", "", 0, {clicked: function(){room.zoom = "window"}});
-	let dresser = new RoomComponent(100, 100, "images/objects/dresser", 200, 200, 1, "start", "", 0, {});
+	let dresser = new RoomComponent(100, 100, "images/objects/dresser", 200, 200, 1, "start", "", 0, {clicked: function(){room.zoom = "dresser"}});
+	let clock = new RoomComponent(50, 50, "images/objects/clock", 295, 60, 1, "start", "", 2, {clicked: function(){room.zoom = "clock"}});
+	let door = new RoomComponent(100, 200, "images/objects/door", 268, 96, 1, "start", "", 3, {});
+	let openDresser = new RoomComponent(354, 300, "images/objects/open-dresser", 221, 42, 1, "start", "open-dresser", 0, {});
+	let largeDresser = new RoomComponent(213, 300, "images/objects/closeup-dresser", 221, 42, 1, "start", "dresser", 0, {clicked: function(){room.zoom = "open-dresser"}});
 	
 	function backgroundCheck(component){
 		if(room.zoom != ""){
@@ -76,6 +82,10 @@
 		leftArrow.update();
 		rightArrow.update();
 		smallWindow.update();
+		clock.update();
+		door.update();
+		openDresser.update();
+		largeDresser.update();
 		dresser.update();
 		
 		if(leftClick) leftClick = false;
@@ -139,6 +149,17 @@
 	// Modulus fix
 	function mod(n, m) {
 		return ((n % m) + m) % m;
+	}
+	
+	
+	function openFullscreen() {
+		if (canvas.requestFullscreen) {
+			canvas.requestFullscreen();
+		} else if (canvas.webkitRequestFullscreen) {
+			canvas.webkitRequestFullscreen();
+		} else if (canvas.msRequestFullscreen) {
+			canvas.msRequestFullscreen();
+		}
 	}
 </script>
 
