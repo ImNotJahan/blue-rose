@@ -15,48 +15,68 @@
 	const canvas = document.getElementById("canvas");
 	let ctx = canvas.getContext("2d");
 	
+	// Events
+	function getCursorPosition(canvas, event) {
+		const rect = canvas.getBoundingClientRect();
+		mousePosition.x = event.clientX - rect.left;
+		mousePosition.y = event.clientY - rect.top;
+	}
+
+	canvas.addEventListener('mousedown', function(e) {
+		getCursorPosition(canvas, e);
+		leftClick = true;
+	});
+	
 	// Temporary storage
-	const room = {facing:0, id:"start"};
+	const room = {facing:0, id:"start", look: function(left){
+		if(left) this.facing--;
+		else this.facing++;
+		
+		this.facing = mod(this.facing, 4);
+	}};
 	let player = {inventory:[]};
+	let mousePosition = {x:0, y:0};
+	let leftClick = true;
 	
 	// Objects
-	let background = new Component(640, 360, "images/backgrounds/" + room.id + room.facing, 0, 0);
-	let leftArrow = new AnimatedComponent(40, 40, "images/ui/arrows/left", 40, 160, 4);
-	let rightArrow = new AnimatedComponent(40, 40, "images/ui/arrows/right", 560, 160, 4);
+	let background = new Component(640, 360, "images/backgrounds/" + room.id + room.facing, 0, 0, 1, {updated: backgroundCheck});
+	let leftArrow = new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
+	let rightArrow = new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
+	
+	function backgroundCheck(component){
+		component.frames[0].src = "images/backgrounds/" + room.id + room.facing + 0 + ".png";
+	}
+	
+	
+	
+	
+	
+	
+	
 	
 	//
-	this.interval = setInterval(update, 250);
+	setInterval(update, 20); // 50 FPS
+	setInterval(frameIncrease, 250); // 4 FPS
 	let frame = 0;
 	
 	function update(){
-		frame++;
-		
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		
 		background.update();
 		leftArrow.update();
 		rightArrow.update();
+		
+		if(leftClick) leftClick = false;
 	}
 	
-	function Component(width, height, image, x, y) {
-		this.image = new Image();
-		this.image.src = image + ".png";
-		
-		this.width = width;
-		this.height = height;
-
-		this.x = x;
-		this.y = y;
-		
-		this.update = function() {
-			ctx.drawImage(this.image,
-			this.x,
-			this.y,
-			this.width, this.height);
-		}
+	function frameIncrease(){
+		frame++;
 	}
 	
-	function AnimatedComponent(width, height, image, x, y, frameCount) {
+	
+	
+	
+	function Component(width, height, image, x, y, frameCount, events) {
 		let frames = [];
 		
 		for(let k = 0; k < frameCount; k++){
@@ -65,19 +85,38 @@
 		}
 		
 		this.frames = frames;
-		
+
 		this.width = width;
 		this.height = height;
 
 		this.x = x;
 		this.y = y;
 		
+		this.events = events;
+		
 		this.update = function() {
-			ctx.drawImage(this.frames[frame % frameCount],
-			this.x,
-			this.y,
-			this.width, this.height);
+			ctx.drawImage(this.frames[mod(frame, frameCount)], this.x, this.y, this.width, this.height);			
+			
+			if(leftClick && this.events.clicked != undefined){
+				let mx = mousePosition.x;
+				let my = mousePosition.y;
+				
+				let ox = this.x;
+				let oy = this.y;
+				
+				let ow = this.width;
+				let oh = this.height;
+				
+				if(mx > ox && mx < ox + ow && my > oy && my < oy + oh) this.events.clicked();
+			}
+			
+			if(this.events.updated != undefined) this.events.updated(this);
 		}
+	}
+	
+	// Modulus fix
+	function mod(n, m) {
+		return ((n % m) + m) % m;
 	}
 </script>
 
