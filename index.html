@@ -43,6 +43,8 @@
 	let leftArrow = new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
 	let rightArrow = new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
 	
+	let smallWindow = new RoomComponent(100, 75, "images/objects/window", 270, 120, 1, "start", 0, {});
+	
 	function backgroundCheck(component){
 		component.frames[0].src = "images/backgrounds/" + room.id + room.facing + 0 + ".png";
 	}
@@ -65,6 +67,7 @@
 		background.update();
 		leftArrow.update();
 		rightArrow.update();
+		smallWindow.update();
 		
 		if(leftClick) leftClick = false;
 	}
@@ -74,7 +77,15 @@
 	}
 	
 	
-	
+	function RoomComponent(width, height, image, x, y, frameCount, id, facing, events){		
+		this.component = new Component(width, height, image, x, y, frameCount, events);
+		this.id = id;
+		this.facing = facing;
+		
+		this.update = function(){
+			if(room.id == this.id && room.facing == this.facing) this.component.update();
+		}
+	}
 	
 	function Component(width, height, image, x, y, frameCount, events) {
 		let frames = [];
