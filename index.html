@@ -13,17 +13,72 @@
 
 	// References
 	const canvas = document.getElementById("canvas");
-	const ctx = canvas.getContext("2d");
+	let ctx = canvas.getContext("2d");
 	
 	// Temporary storage
 	const room = {facing:0, id:"start"};
 	let player = {inventory:[]};
 	
-	// Images
-	let background = new Image();
-	background.src = "images/backgrounds/" + room.id + room.facing + ".png";
+	// Objects
+	let background = new Component(640, 360, "images/backgrounds/" + room.id + room.facing, 0, 0);
+	let leftArrow = new AnimatedComponent(40, 40, "images/ui/arrows/left", 40, 160, 4);
+	let rightArrow = new AnimatedComponent(40, 40, "images/ui/arrows/right", 560, 160, 4);
 	
-	background.onload = function() { ctx.drawImage(background, 0, 0); };
+	//
+	this.interval = setInterval(update, 250);
+	let frame = 0;
+	
+	function update(){
+		frame++;
+		
+		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		
+		background.update();
+		leftArrow.update();
+		rightArrow.update();
+	}
+	
+	function Component(width, height, image, x, y) {
+		this.image = new Image();
+		this.image.src = image + ".png";
+		
+		this.width = width;
+		this.height = height;
+
+		this.x = x;
+		this.y = y;
+		
+		this.update = function() {
+			ctx.drawImage(this.image,
+			this.x,
+			this.y,
+			this.width, this.height);
+		}
+	}
+	
+	function AnimatedComponent(width, height, image, x, y, frameCount) {
+		let frames = [];
+		
+		for(let k = 0; k < frameCount; k++){
+			frames[k] = new Image();
+			frames[k].src = image + k + ".png";
+		}
+		
+		this.frames = frames;
+		
+		this.width = width;
+		this.height = height;
+
+		this.x = x;
+		this.y = y;
+		
+		this.update = function() {
+			ctx.drawImage(this.frames[frame % frameCount],
+			this.x,
+			this.y,
+			this.width, this.height);
+		}
+	}
 </script>
 
 <style>
