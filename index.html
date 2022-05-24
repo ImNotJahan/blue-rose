@@ -2,7 +2,7 @@
 
 <html>
 	<body>
-		<canvas id="canvas" width="640" height="360" style="border:1px solid #000000;"></canvas>
+		<canvas id="canvas" width="640" height="360"></canvas>
 	</body>
 </html>
 
@@ -30,7 +30,7 @@
 
 	// Temporary storage
 	const room = {facing:0, id:"start", zoom: "", look: function(left){
-			if(room.zoom != ""){
+			if(room.zoom !== ""){
 				room.zoom = "";
 				return;
 			}
@@ -39,35 +39,37 @@
 			else this.facing++;
 
 			this.facing = mod(this.facing, 4);
+		},
+		pause: function(){
+			room.zoom = "pause";
 		}};
 	let player = {inventory:[]};
 	let mousePosition = {x:0, y:0};
 	let leftClick = true;
+	let components = [];
 
 	// Objects
 	let background = new Component(640, 360, "images/backgrounds/" + room.id + room.facing, 0, 0, 1, {updated: backgroundCheck});
 	let leftArrow = new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
 	let rightArrow = new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
+	let pause = new Component(40, 40, "images/ui/pause/pause", 560, 15, 16, {clicked: function(){room.pause()}});
 
 	let smallWindow = new RoomComponent(100, 75, "images/objects/window", 270, 120, 1, "start", "", 0, {clicked: function(){room.zoom = "window"}});
+	let openDresser = new RoomComponent(354, 300, "images/objects/open-dresser", 221, 42, 1, "start", "open-dresser", 0, {});
+	let largeDresser = new RoomComponent(213, 300, "images/objects/closeup-dresser", 221, 42, 1, "start", "dresser", 0, {clicked: function(){room.zoom = "open-dresser"}});
 	let dresser = new RoomComponent(100, 100, "images/objects/dresser", 200, 200, 1, "start", "", 0, {clicked: function(){room.zoom = "dresser"}});
 	let clock = new RoomComponent(50, 50, "images/objects/clock", 295, 60, 1, "start", "", 2, {clicked: function(){room.zoom = "clock"}});
 	let door = new RoomComponent(100, 200, "images/objects/door", 268, 96, 1, "start", "", 3, {});
-	let openDresser = new RoomComponent(354, 300, "images/objects/open-dresser", 221, 42, 1, "start", "open-dresser", 0, {});
-	let largeDresser = new RoomComponent(213, 300, "images/objects/closeup-dresser", 221, 42, 1, "start", "dresser", 0, {clicked: function(){room.zoom = "open-dresser"}});
-	let book = new RoomComponent(55, 33, "images/objects/book", 294, 264, 1, "start", "open-dresser", 0, {});
+	let book = new ItemComponent(55, 33, "images/objects/book", 294, 264, 1, "start", "open-dresser", 0, {});
+
+	let continueButton = new RoomComponent(200, 50, "images/ui/pause/continuebutton", 220, 100, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
+	let menuButton = new RoomComponent(200, 50, "images/ui/pause/menubutton", 220, 170, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
 
 	function backgroundCheck(component){
 		if(room.zoom !== ""){
 			component.frames[0].src = "images/backgrounds/" + room.zoom + 0 + ".png";
 		} else component.frames[0].src = "images/backgrounds/" + room.id + room.facing + 0 + ".png";
 	}
-
-
-
-
-
-
 
 
 	//
@@ -78,16 +80,7 @@
 	function update(){
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-		background.update();
-		leftArrow.update();
-		rightArrow.update();
-		smallWindow.update();
-		clock.update();
-		door.update();
-		openDresser.update();
-		book.update();
-		largeDresser.update();
-		dresser.update();
+		components.forEach(component => component.update());
 
 		if(leftClick) leftClick = false;
 	}
@@ -96,6 +89,24 @@
 		frame++;
 	}
 
+	function ItemComponent(width, height, image, x, y, frameCount, id, zoom, facing, inventoryComponent, events){
+		this.component = new RoomComponent(width, height, image, x, y, frameCount, id, zoom, facing, events);
+
+		this.inventoryComponent = inventoryComponent;
+
+		components[components.length - 1] = this;
+
+		this.update = function(){
+			this.component.update();
+
+			if(this.component.component.wasClicked){
+				this.component.id = "dead";
+				player.inventory.add(new Component(75, 75,
+						"images/inventory/" + image.split("/")[2],
+						550, 25 * (player.inventory.length + 1)));
+			}
+		}
+	}
 
 	function RoomComponent(width, height, image, x, y, frameCount, id, zoom, facing, events){
 		this.component = new Component(width, height, image, x, y, frameCount, events);
@@ -103,6 +114,8 @@
 		this.id = id;
 		this.zoom = zoom;
 		this.facing = facing;
+
+		components[components.length - 1] = this;
 
 		this.update = function(){
 			if(room.id === this.id && room.zoom === this.zoom && room.facing === this.facing) this.component.update();
@@ -127,8 +140,14 @@
 
 		this.events = events;
 
+		this.wasClicked = false;
+
+		components[components.length] = this;
+
 		this.update = function() {
 			ctx.drawImage(this.frames[mod(frame, frameCount)], this.x, this.y, this.width, this.height);
+
+			this.wasClicked = false;
 
 			if(leftClick && this.events.clicked !== undefined){
 				let mx = mousePosition.x;
@@ -140,7 +159,10 @@
 				let ow = this.width;
 				let oh = this.height;
 
-				if(mx > ox && mx < ox + ow && my > oy && my < oy + oh) this.events.clicked();
+				if(mx > ox && mx < ox + ow && my > oy && my < oy + oh){
+					this.events.clicked();
+					this.wasClicked = true;
+				}
 			}
 
 			if(this.events.updated !== undefined) this.events.updated(this);
