@@ -52,15 +52,21 @@
 	let background = new Component(640, 360, "images/backgrounds/" + room.id + room.facing, 0, 0, 1, {updated: backgroundCheck});
 	let leftArrow = new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
 	let rightArrow = new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
-	let pause = new Component(40, 40, "images/ui/pause/pause", 560, 15, 16, {clicked: function(){room.pause()}});
+	//let pause = new Component(40, 40, "images/ui/pause/pause", 560, 15, 16, {clicked: function(){room.pause()}});
 
-	let smallWindow = new RoomComponent(100, 75, "images/objects/window", 270, 120, 1, "start", "", 0, {clicked: function(){room.zoom = "window"}});
+	let smallWindow = new RoomComponent(100, 75, "images/objects/window", 270, 120, 1, "start", "", 0, {clicked: function(){room.zoom = "window-day"}});
 	let openDresser = new RoomComponent(354, 300, "images/objects/open-dresser", 221, 42, 1, "start", "open-dresser", 0, {});
 	let largeDresser = new RoomComponent(213, 300, "images/objects/closeup-dresser", 221, 42, 1, "start", "dresser", 0, {clicked: function(){room.zoom = "open-dresser"}});
 	let dresser = new RoomComponent(100, 100, "images/objects/dresser", 200, 200, 1, "start", "", 0, {clicked: function(){room.zoom = "dresser"}});
 	let clock = new RoomComponent(50, 50, "images/objects/clock", 295, 60, 1, "start", "", 2, {clicked: function(){room.zoom = "clock"}});
-	let door = new RoomComponent(100, 200, "images/objects/door", 268, 96, 1, "start", "", 3, {});
+	let door = new RoomComponent(100, 117, "images/objects/door", 268, 96, 1, "start", "", 3, {clicked: function(){room.zoom = "door"}});
+	let doorBottom = new RoomComponent(100, 83, "images/objects/door-bottom", 268, 213, 1, "start", "", 3, {clicked: function(){room.zoom = "door-bottom"}});
 	let book = new ItemComponent(55, 33, "images/objects/book", 294, 264, 1, "start", "open-dresser", 0, {});
+	let goatSkull = new RoomComponent(50, 50, "images/objects/goatskull", 150, 250, 1, "start", "", 1, {});
+	let safe = new RoomComponent(100, 100, "images/objects/safe", 260, 210, 1, "start", "", 2, {clicked: function(){room.zoom = "safe"}});
+	let desk = new RoomComponent(150, 100, "images/objects/desk", 250, 200, 1, "start", "", 1, {clicked: function(){room.zoom = "desk"}});
+	let paper = new RoomComponent(132, 215, "images/objects/paper", 125, 107, 1, "start", "desk", 1, {clicked: function(){}});
+	let pen = new RoomComponent(57, 57, "images/objects/pen", 400, 140, 1, "start", "desk", 1, {clicked: function(){}});
 
 	let continueButton = new RoomComponent(200, 50, "images/ui/pause/continuebutton", 220, 100, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
 	let menuButton = new RoomComponent(200, 50, "images/ui/pause/menubutton", 220, 170, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
