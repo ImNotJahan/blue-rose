@@ -28,6 +28,11 @@
 		leftClick = true;
 	});
 
+	// Sounds
+	const safeBeep = new Sound("sounds/safeBeep.mp3");
+	const safeSuccess = new Sound("sounds/safeSuccess.mp3");
+	const safeFail = new Sound("sounds/safeFail.mp3");
+
 	// Temporary storage
 	const room = {facing:0, id:"start", zoom: "", look: function(left){
 			if(room.zoom !== ""){
@@ -48,12 +53,16 @@
 	let leftClick = true;
 	let components = [];
 	let slotApx = 0;
+	let code = "";
+	let clickHeat = 2;
 
 	// Objects
 	let background = new Component(640, 360, "images/backgrounds/" + room.id + room.facing, 0, 0, 1, {updated: backgroundCheck});
 	let leftArrow = new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
 	let rightArrow = new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
 	//let pause = new Component(40, 40, "images/ui/pause/pause", 560, 15, 16, {clicked: function(){room.pause()}});
+	let lightWindowCode = new RoomComponent(54, 10, "images/objects/windowCode", 471, 309, 1, "start", "window-day", 0, {clicked: windowInteract})
+	let darkWindowCode = new RoomComponent(54, 10, "images/objects/dwindowCode", 471, 309, 1, "start", "window-dark", 0, {clicked: windowInteract})
 
 	slotApx = components.length;
 
@@ -75,7 +84,17 @@
 	let desk = new RoomComponent(150, 100, "images/objects/desk", 250, 200, 1, "start", "", 1, {clicked: function(){room.zoom = "desk"}});
 	let paper = new ItemComponent(132, 215, "images/objects/paper", 125, 107, 1, "start", "desk", 1, {clicked: function(){}});
 	let pen = new ItemComponent(57, 57, "images/objects/pen", 400, 140, 1, "start", "desk", 1, {clicked: function(){}});
-	let eyes = new RoomComponent(306, 11, "images/objects/eyes", 177, 290, 1, "start", "door-bottom", 3, {clicked: eyesInteract});
+	let eyes = new RoomComponent(306, 11, "images/objects/eyes", 177, 290, 1, "start", "door-bottom", 3, {parameterClicked: eyesInteract});
+	let lever = new RoomComponent(214, 73, "images/objects/lever", 121, 239, 1, "start", "safe", 2, {});
+	let keyhole = new RoomComponent(25, 22, "images/objects/keyhole", 174, 29, 1, "start", "safe", 2, {});
+
+	for(let x = 0; x < 3; x++){
+		for(let y = 0; y < 3; y++){
+			new RoomComponent(25, 15, "images/objects/buttons/button" + (x + y * 3), 440 + 30 * x, 30 + 20 * y, 1, "start", "safe", 2, {parameterClicked: safeButton});
+		}
+	}
+
+	new RoomComponent(25, 15, "images/objects/buttons/button-1", 470, 90, 1, "start", "safe", 2, {parameterClicked: safeButton});
 
 	let continueButton = new RoomComponent(200, 50, "images/ui/pause/continuebutton", 220, 100, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
 	let menuButton = new RoomComponent(200, 50, "images/ui/pause/menubutton", 220, 170, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
@@ -86,13 +105,29 @@
 		} else component.frames[0].src = "images/backgrounds/" + room.id + room.facing + 0 + ".png";
 	}
 
+	function safeButton(component){
+		let buttonId = component.src.split("/")[3].split("button")[1];
+
+		safeBeep.play();
+		code += parseInt(buttonId) + 1;
+
+		if(code.length >= 4){
+			if(code === "7805"){
+				safeSuccess.play();
+			} else{
+				safeFail.play();
+				code = "";
+			}
+		}
+	}
+
 	function eyesInteract(){
-		if(player.selected === "paper"){
+		if(player.selected === "writtenPaper"){
 			player.selected = "";
 
 			// Remove paper in players inventory
 			for(let k = 0; k < player.inventory.length; k++){
-				if(player.inventory[k] !== undefined && player.inventory[k].name === "paper"){
+				if(player.inventory[k] !== undefined && player.inventory[k].name === "writtenPaper"){
 					components[player.inventory[k].id] = undefined;
 					player.inventory[k] = undefined;
 					break;
@@ -100,6 +135,25 @@
 			}
 
 			new ItemComponent(50, 23, "images/objects/code", 300, 300, 1, "start", "door-bottom", 3, {clicked: function(){}});
+		}
+	}
+
+	function windowInteract(){
+		let paper = -1;
+		let pen = -1;
+
+		for(let k = 0; k < player.inventory.length; k++){
+			if(player.inventory[k] !== undefined){
+				if(player.inventory[k].name === "paper") paper = k;
+				else if(player.inventory[k].name === "pen") pen = k;
+			}
+		}
+
+		if(pen >= 0 && paper >= 0){
+			components[player.inventory[paper].id] = undefined;
+			player.inventory[paper] = undefined;
+
+			player.inventory[paper] = new InventoryComponent("images/inventory/writtenPaper", paper, "writtenPaper", {});
 		}
 	}
 
@@ -119,10 +173,13 @@
 
 	function frameIncrease(){
 		frame++;
+		clickHeat++;
 	}
 
 	function InventoryComponent(image, id, name, events){
 		this.id = components.length;
+		this.name = name;
+		this.slotId = id + slotApx;
 
 		this.component = new Component(50, 50, image, 90 + 80 * id, 300, 1, {clicked: function(){
 				if(player.selected === name){
@@ -132,7 +189,9 @@
 				else{
 					if(player.selected !== ""){
 						for(let k = 0; k < player.inventory.length; k++){
-							if(player.inventory[k] !== undefined && player.inventory[k].name === player.selected) components[player.inventory[k].id].frames[0].src = "images/ui/slot0.png";
+							if(player.inventory[k] !== undefined && player.inventory[k].name === player.selected){
+								components[player.inventory[k].slotId].frames[0].src = "images/ui/slot0.png";
+							}
 						}
 					}
 
@@ -191,6 +250,7 @@
 			frames[k].src = image + k + ".png";
 		}
 
+		this.src = image;
 		this.frames = frames;
 
 		this.width = width;
@@ -210,7 +270,7 @@
 
 			this.wasClicked = false;
 
-			if(leftClick && this.events.clicked !== undefined){
+			if(leftClick && (this.events.clicked !== undefined || this.events.parameterClicked !== undefined && clickHeat > 1)){
 				let mx = mousePosition.x;
 				let my = mousePosition.y;
 
@@ -221,12 +281,30 @@
 				let oh = this.height;
 
 				if(mx > ox && mx < ox + ow && my > oy && my < oy + oh){
-					this.events.clicked();
+					if(this.events.clicked !== undefined) this.events.clicked();
+					if(this.events.parameterClicked !== undefined) this.events.parameterClicked(this);
+
 					this.wasClicked = true;
+					clickHeat = 0;
 				}
 			}
 
 			if(this.events.updated !== undefined) this.events.updated(this);
+		}
+	}
+
+	function Sound(src) {
+		this.sound = document.createElement("audio");
+		this.sound.src = src;
+		this.sound.setAttribute("preload", "auto");
+		this.sound.setAttribute("controls", "none");
+		this.sound.style.display = "none";
+		document.body.appendChild(this.sound);
+		this.play = function(){
+			this.sound.play();
+		}
+		this.stop = function(){
+			this.sound.pause();
 		}
 	}
 
