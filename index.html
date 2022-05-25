@@ -106,6 +106,8 @@
 
 	new RoomComponent(25, 15, "images/objects/buttons/button-1", 470, 90, 1, "start", "safe", 2, {parameterClicked: safeButton});
 
+	new RoomComponent(640, 360, "images/ui/loading", 0, 0, 1, "never", "never", 0, {});
+
 	//let continueButton = new RoomComponent(200, 50, "images/ui/pause/continuebutton", 220, 100, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
 	//let menuButton = new RoomComponent(200, 50, "images/ui/pause/menubutton", 220, 170, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
 	let interval;
@@ -306,6 +308,7 @@
 
 		this.update = function(){
 			if(room.id === this.id && room.zoom === this.zoom && room.facing === this.facing) this.component.update();
+			else if(frame === 0) this.component.update();
 		}
 	}
 
