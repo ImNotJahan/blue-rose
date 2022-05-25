@@ -62,6 +62,10 @@
 	let clickHeat = 2;
 	let doorUnlocked = false;
 
+	const backgrounds = ["clock", "desk", "door", "door-bottom", "dresser",
+	"end", "open-dresser", "openedDoor", "openedSafe", "pause", "safe", "start0",
+	"start1", "start2", "start3", "window-day", "window-night"];
+
 	// Objects
 	let background = new Component(640, 360, "images/backgrounds/" + room.id + room.facing, 0, 0, 1, {updated: backgroundCheck});
 	let leftArrow = new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
@@ -103,6 +107,9 @@
 			new RoomComponent(25, 15, "images/objects/buttons/button" + (x + y * 3), 440 + 30 * x, 30 + 20 * y, 1, "start", "safe", 2, {parameterClicked: safeButton});
 		}
 	}
+
+	// Load backgrounds
+	backgrounds.forEach(background => new RoomComponent(640, 360, "images/backgrounds/" + background, 0, 0, 1, "never", "never", 0, {}));
 
 	new RoomComponent(25, 15, "images/objects/buttons/button-1", 470, 90, 1, "start", "safe", 2, {parameterClicked: safeButton});
 
