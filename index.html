@@ -32,6 +32,11 @@
 	const safeBeep = new Sound("sounds/safeBeep.mp3");
 	const safeSuccess = new Sound("sounds/safeSuccess.mp3");
 	const safeFail = new Sound("sounds/safeFail.mp3");
+	const keyTurned = new Sound("sounds/keyTurned.wav");
+	const writing = new Sound("sounds/writing.wav");
+	const paperSlide = new Sound("sounds/paperSlide.wav");
+	const latch = new Sound("sounds/latch.wav");
+	const doorknobTurn = new Sound("sounds/doorknob.mp3")
 
 	// Temporary storage
 	const room = {facing:0, id:"start", zoom: "", look: function(left){
@@ -55,6 +60,7 @@
 	let slotApx = 0;
 	let code = "";
 	let clickHeat = 2;
+	let doorUnlocked = false;
 
 	// Objects
 	let background = new Component(640, 360, "images/backgrounds/" + room.id + room.facing, 0, 0, 1, {updated: backgroundCheck});
@@ -85,8 +91,12 @@
 	let paper = new ItemComponent(132, 215, "images/objects/paper", 125, 107, 1, "start", "desk", 1, {clicked: function(){}});
 	let pen = new ItemComponent(57, 57, "images/objects/pen", 400, 140, 1, "start", "desk", 1, {clicked: function(){}});
 	let eyes = new RoomComponent(306, 11, "images/objects/eyes", 177, 290, 1, "start", "door-bottom", 3, {parameterClicked: eyesInteract});
-	let lever = new RoomComponent(214, 73, "images/objects/lever", 121, 239, 1, "start", "safe", 2, {});
+	let lever = new RoomComponent(214, 73, "images/objects/lever", 121, 239, 1, "start", "safe", 2, {clicked: pulledLever});
 	let keyhole = new RoomComponent(25, 22, "images/objects/keyhole", 174, 29, 1, "start", "safe", 2, {});
+	let key = new ItemComponent(25, 20, "images/objects/doorKey", 234, 292, 1, "start", "openedSafe", 2, {clicked: function(){}});
+	let doorKeyhole = new RoomComponent(16, 21, "images/objects/doorKeyhole", 126, 242, 1, "start", "door", 3, {clicked: unlockDoor});
+	let doorknob = new RoomComponent(32, 31, "images/objects/doorknob", 119, 208, 1, "start", "door", 3, {clicked: turnDoorknob});
+	let man = new RoomComponent(373, 360, "images/objects/man", 122, 0, 1, "start", "openedDoor", 3, {clicked: viewMan});
 
 	for(let x = 0; x < 3; x++){
 		for(let y = 0; y < 3; y++){
@@ -96,13 +106,66 @@
 
 	new RoomComponent(25, 15, "images/objects/buttons/button-1", 470, 90, 1, "start", "safe", 2, {parameterClicked: safeButton});
 
-	let continueButton = new RoomComponent(200, 50, "images/ui/pause/continuebutton", 220, 100, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
-	let menuButton = new RoomComponent(200, 50, "images/ui/pause/menubutton", 220, 170, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
+	//let continueButton = new RoomComponent(200, 50, "images/ui/pause/continuebutton", 220, 100, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
+	//let menuButton = new RoomComponent(200, 50, "images/ui/pause/menubutton", 220, 170, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
+	let interval;
+	function viewMan(){
+		interval = setInterval(darkness, 50);
+	}
+
+	function darkness(){
+		ctx.globalAlpha -= .01;
+
+		if(ctx.globalAlpha <= 0.01){
+			clearInterval(interval);
+			room.id = "end";
+			room.zoom = "end";
+			interval = setInterval(brightness, 50);
+		}
+	}
+
+	function brightness(){
+		ctx.globalAlpha += .01;
+
+		if(ctx.globalAlpha >= 1){
+			clearInterval(interval);
+		}
+	}
+
+	function turnDoorknob(){
+		if(doorUnlocked){
+			doorknobTurn.play();
+			room.zoom = "openedDoor";
+		}
+	}
+
+	function unlockDoor(){
+		if(player.selected === "doorKey"){
+			doorUnlocked = true;
+			keyTurned.play();
+
+			for(let k = 0; k < player.inventory.length; k++){
+				if(player.inventory[k] !== undefined && player.inventory[k].name === "doorKey"){
+					components[player.inventory[k].id] = undefined;
+					player.inventory[k] = undefined;
+					break;
+				}
+			}
+		}
+	}
 
 	function backgroundCheck(component){
 		if(room.zoom !== ""){
 			component.frames[0].src = "images/backgrounds/" + room.zoom + 0 + ".png";
 		} else component.frames[0].src = "images/backgrounds/" + room.id + room.facing + 0 + ".png";
+	}
+
+	function pulledLever(){
+		if(code === "7805"){
+			code = "";
+			room.zoom = "openedSafe";
+			latch.play();
+		}
 	}
 
 	function safeButton(component){
@@ -135,6 +198,8 @@
 			}
 
 			new ItemComponent(50, 23, "images/objects/code", 300, 300, 1, "start", "door-bottom", 3, {clicked: function(){}});
+
+			paperSlide.play();
 		}
 	}
 
@@ -154,6 +219,8 @@
 			player.inventory[paper] = undefined;
 
 			player.inventory[paper] = new InventoryComponent("images/inventory/writtenPaper", paper, "writtenPaper", {});
+
+			writing.play();
 		}
 	}
 
