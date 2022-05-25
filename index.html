@@ -43,16 +43,24 @@
 		pause: function(){
 			room.zoom = "pause";
 		}};
-	let player = {inventory:[]};
+	let player = {inventory:[undefined, undefined, undefined, undefined, undefined, undefined], selected:""};
 	let mousePosition = {x:0, y:0};
 	let leftClick = true;
 	let components = [];
+	let slotApx = 0;
 
 	// Objects
 	let background = new Component(640, 360, "images/backgrounds/" + room.id + room.facing, 0, 0, 1, {updated: backgroundCheck});
 	let leftArrow = new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
 	let rightArrow = new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
 	//let pause = new Component(40, 40, "images/ui/pause/pause", 560, 15, 16, {clicked: function(){room.pause()}});
+
+	slotApx = components.length;
+
+	// Draw inventory slots
+	for(let k = 0; k < 6; k++){
+		new Component(50, 50, "images/ui/slot", 90 + 80 * k, 300, 1, {});
+	}
 
 	let smallWindow = new RoomComponent(100, 75, "images/objects/window", 270, 120, 1, "start", "", 0, {clicked: function(){room.zoom = "window-day"}});
 	let openDresser = new RoomComponent(354, 300, "images/objects/open-dresser", 221, 42, 1, "start", "open-dresser", 0, {});
@@ -61,12 +69,13 @@
 	let clock = new RoomComponent(50, 50, "images/objects/clock", 295, 60, 1, "start", "", 2, {clicked: function(){room.zoom = "clock"}});
 	let door = new RoomComponent(100, 117, "images/objects/door", 268, 96, 1, "start", "", 3, {clicked: function(){room.zoom = "door"}});
 	let doorBottom = new RoomComponent(100, 83, "images/objects/door-bottom", 268, 213, 1, "start", "", 3, {clicked: function(){room.zoom = "door-bottom"}});
-	let book = new ItemComponent(55, 33, "images/objects/book", 294, 264, 1, "start", "open-dresser", 0, {});
+	let book = new ItemComponent(55, 33, "images/objects/book", 294, 264, 1, "start", "open-dresser", 0, {clicked: function(){}});
 	let goatSkull = new RoomComponent(50, 50, "images/objects/goatskull", 150, 250, 1, "start", "", 1, {});
 	let safe = new RoomComponent(100, 100, "images/objects/safe", 260, 210, 1, "start", "", 2, {clicked: function(){room.zoom = "safe"}});
 	let desk = new RoomComponent(150, 100, "images/objects/desk", 250, 200, 1, "start", "", 1, {clicked: function(){room.zoom = "desk"}});
-	let paper = new RoomComponent(132, 215, "images/objects/paper", 125, 107, 1, "start", "desk", 1, {clicked: function(){}});
-	let pen = new RoomComponent(57, 57, "images/objects/pen", 400, 140, 1, "start", "desk", 1, {clicked: function(){}});
+	let paper = new ItemComponent(132, 215, "images/objects/paper", 125, 107, 1, "start", "desk", 1, {clicked: function(){}});
+	let pen = new ItemComponent(57, 57, "images/objects/pen", 400, 140, 1, "start", "desk", 1, {clicked: function(){}});
+	let eyes = new RoomComponent(306, 11, "images/objects/eyes", 177, 290, 1, "start", "door-bottom", 3, {clicked: eyesInteract});
 
 	let continueButton = new RoomComponent(200, 50, "images/ui/pause/continuebutton", 220, 100, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
 	let menuButton = new RoomComponent(200, 50, "images/ui/pause/menubutton", 220, 170, 1, "start", "pause", 0, {clicked: function(){room.zoom = " "}});
@@ -75,6 +84,23 @@
 		if(room.zoom !== ""){
 			component.frames[0].src = "images/backgrounds/" + room.zoom + 0 + ".png";
 		} else component.frames[0].src = "images/backgrounds/" + room.id + room.facing + 0 + ".png";
+	}
+
+	function eyesInteract(){
+		if(player.selected === "paper"){
+			player.selected = "";
+
+			// Remove paper in players inventory
+			for(let k = 0; k < player.inventory.length; k++){
+				if(player.inventory[k] !== undefined && player.inventory[k].name === "paper"){
+					components[player.inventory[k].id] = undefined;
+					player.inventory[k] = undefined;
+					break;
+				}
+			}
+
+			new ItemComponent(50, 23, "images/objects/code", 300, 300, 1, "start", "door-bottom", 3, {clicked: function(){}});
+		}
 	}
 
 
@@ -86,7 +112,7 @@
 	function update(){
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-		components.forEach(component => component.update());
+		components.forEach(component => { if(component !== undefined) component.update(); });
 
 		if(leftClick) leftClick = false;
 	}
@@ -95,21 +121,50 @@
 		frame++;
 	}
 
-	function ItemComponent(width, height, image, x, y, frameCount, id, zoom, facing, inventoryComponent, events){
+	function InventoryComponent(image, id, name, events){
+		this.id = components.length;
+
+		this.component = new Component(50, 50, image, 90 + 80 * id, 300, 1, {clicked: function(){
+				if(player.selected === name){
+					player.selected = "";
+					components[id + slotApx].frames[0].src = "images/ui/slot0.png";
+				}
+				else{
+					if(player.selected !== ""){
+						for(let k = 0; k < player.inventory.length; k++){
+							if(player.inventory[k] !== undefined && player.inventory[k].name === player.selected) components[player.inventory[k].id].frames[0].src = "images/ui/slot0.png";
+						}
+					}
+
+					player.selected = name;
+
+					components[id + slotApx].frames[0].src = "images/ui/selected0.png";
+				}
+			}});
+
+		this.update = function(){
+			this.component.update();
+		}
+	}
+
+	function ItemComponent(width, height, image, x, y, frameCount, id, zoom, facing, events){
 		this.component = new RoomComponent(width, height, image, x, y, frameCount, id, zoom, facing, events);
 
-		this.inventoryComponent = inventoryComponent;
-
 		components[components.length - 1] = this;
+		this.id = components.length - 1;
 
 		this.update = function(){
 			this.component.update();
 
 			if(this.component.component.wasClicked){
-				this.component.id = "dead";
-				player.inventory.add(new Component(75, 75,
-						"images/inventory/" + image.split("/")[2],
-						550, 25 * (player.inventory.length + 1)));
+				components[this.id] = undefined;
+
+				let nextFreeID = -1;
+				for(let k = 0; k < player.inventory.length; k++){
+					if(player.inventory[k] === undefined) nextFreeID = k;
+				}
+
+				player.inventory[nextFreeID] = new InventoryComponent("images/inventory/" + image.split("/")[2], nextFreeID, image.split("/")[2], {});
 			}
 		}
 	}
