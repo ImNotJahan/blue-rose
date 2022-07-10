@@ -95,7 +95,7 @@
 	let paper = new ItemComponent(132, 215, "images/objects/paper", 125, 107, 1, "start", "desk", 1, {clicked: function(){}});
 	let pen = new ItemComponent(57, 57, "images/objects/pen", 400, 140, 1, "start", "desk", 1, {clicked: function(){}});
 	new RoomComponent(306, 11, "images/objects/eyes", 177, 290, 1, "start", "door-bottom", 3, {parameterClicked: eyesInteract});
-	new RoomComponent(214, 73, "images/objects/lever", 121, 239, 1, "start", "safe", 2, {clicked: pulledLever});
+	new RoomComponent(214, 73, "images/objects/lever", 121, 200, 1, "start", "safe", 2, {clicked: pulledLever});
 	new RoomComponent(25, 22, "images/objects/keyhole", 174, 29, 1, "start", "safe", 2, {});
 	new ItemComponent(25, 20, "images/objects/doorKey", 234, 292, 1, "start", "openedSafe", 2, {clicked: function(){}});
 	new RoomComponent(16, 21, "images/objects/doorKeyhole", 126, 242, 1, "start", "door", 3, {clicked: unlockDoor});
@@ -108,14 +108,14 @@
 
 	for(let x = 0; x < 3; x++){
 		for(let y = 0; y < 3; y++){
-			new RoomComponent(25, 15, "images/objects/buttons/button" + (x + y * 3), 440 + 30 * x, 30 + 20 * y, 1, "start", "safe", 2, {parameterClicked: safeButton});
+			new RoomComponent(25, 15, "images/objects/buttons/button" + (x + y * 3), 400 + 30 * x, 30 + 20 * y, 1, "start", "safe", 2, {parameterClicked: safeButton});
 		}
 	}
 
 	// Load backgrounds
 	backgrounds.forEach(background => new RoomComponent(640, 360, "images/backgrounds/" + background, 0, 0, 1, "never", "never", 0, {}));
 
-	new RoomComponent(25, 15, "images/objects/buttons/button-1", 470, 90, 1, "start", "safe", 2, {parameterClicked: safeButton});
+	new RoomComponent(25, 15, "images/objects/buttons/button-1", 430, 90, 1, "start", "safe", 2, {parameterClicked: safeButton});
 
 	new RoomComponent(640, 360, "images/ui/loading", 0, 0, 1, "never", "never", 0, {});
 
