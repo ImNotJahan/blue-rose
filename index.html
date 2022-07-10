@@ -63,7 +63,7 @@
 	let doorUnlocked = false;
 
 	const backgrounds = ["clock", "desk", "door", "door-bottom", "dresser",
-	"end", "open-dresser", "openedDoor", "openedSafe", "pause", "safe", "start0",
+	"man", "open-dresser", "openedDoor", "openedSafe", "pause", "safe", "start0",
 	"start1", "start2", "start3", "window-day", "window-night"];
 
 	// Objects
@@ -104,6 +104,7 @@
 	new RoomComponent(260, 90, "images/objects/empty", 150, 140, 1, "start", "clock", 2, {clicked: clickedClock});
 	let clockHandle = new RoomComponent(37, 37, "images/objects/clockHands/hand", 315, 139, 1, "start", "clock", 2, {init: clockHandInit});
 	new RoomComponent(640, 360, "images/objects/man/man", 0, 0, 3, "start", "man", 3, {clicked: function(){room.zoom = ""}});
+	const brokenCompass = new RoomComponent(75, 71, "images/objects/brokenCompass", 382, 204, 1, "start", "desk", 1, {clicked: handleBrokenCompass});
 
 	for(let x = 0; x < 3; x++){
 		for(let y = 0; y < 3; y++){
@@ -144,9 +145,54 @@
 		self.frames[0].src = "images/objects/clockHands/hand11.png";
 	}
 
+	function handleBrokenCompass(){
+		if(player.selected === "compassNeedle" || true){
+			for(let k = 0; k < player.inventory.length; k++){
+				if(player.inventory[k] !== undefined && player.inventory[k].name === "compassNeedle"){
+					components[player.inventory[k].id] = undefined;
+					player.inventory[k] = undefined;
+					break;
+				}
+			}
+
+			components[brokenCompass.numId] = undefined;
+			new ItemComponent(75, 71, "images/objects/compass", 382, 204, 1, "start", "desk", 1,
+					{clicked: function(){}, invUpdate: handleCompassDirection});
+		}
+	}
+
 	function handleWindow(){
 		if(time !== 6) room.zoom = "window-day";
 		else room.zoom = "window-night";
+	}
+
+	let compassDirection = 1;
+	function handleCompassDirection(self){
+		let img = "/images/inventory/compass/";
+		const direction = (room.facing - compassDirection + 4) % 4;
+		console.log(direction);
+		switch(direction){
+			case 0:
+				img += "north0.png";
+				break
+
+			case 1:
+				img += "east0.png";
+				break
+
+			case 2:
+				img += "south0.png";
+				break
+
+			case 3:
+				img += "west0.png";
+				break
+
+			default:
+				console.log("Compass direction incorrect: " + direction)
+		}
+
+		self.frames[0].src = img;
 	}
 
 	function lightOrDarkWindow(){
@@ -288,25 +334,36 @@
 		this.name = name;
 		this.slotId = id + slotApx;
 
-		this.component = new Component(50, 50, image, 90 + 80 * id, 300, 1, {clicked: function(){
-				if(player.selected === name){
-					player.selected = "";
-					components[id + slotApx].frames[0].src = "images/ui/slot0.png";
-				}
-				else{
-					if(player.selected !== ""){
-						for(let k = 0; k < player.inventory.length; k++){
-							if(player.inventory[k] !== undefined && player.inventory[k].name === player.selected){
-								components[player.inventory[k].slotId].frames[0].src = "images/ui/slot0.png";
-							}
+		let componentEvents = {};
+
+		componentEvents.clicked = function()
+		{
+			if (player.selected === name)
+			{
+				player.selected = "";
+				components[id + slotApx].frames[0].src = "images/ui/slot0.png";
+			} else
+			{
+				if (player.selected !== "")
+				{
+					for (let k = 0; k < player.inventory.length; k++)
+					{
+						if (player.inventory[k] !== undefined && player.inventory[k].name === player.selected)
+						{
+							components[player.inventory[k].slotId].frames[0].src = "images/ui/slot0.png";
 						}
 					}
-
-					player.selected = name;
-
-					components[id + slotApx].frames[0].src = "images/ui/selected0.png";
 				}
-			}});
+
+				player.selected = name;
+
+				components[id + slotApx].frames[0].src = "images/ui/selected0.png";
+			}
+		}
+
+		if(events.updated !== undefined) componentEvents.updated = events.updated;
+
+		this.component = new Component(50, 50, image, 90 + 80 * id, 300, 1, componentEvents);
 
 		this.update = function(){
 			this.component.update();
@@ -330,7 +387,10 @@
 					if(player.inventory[k] === undefined) nextFreeID = k;
 				}
 
-				player.inventory[nextFreeID] = new InventoryComponent("images/inventory/" + image.split("/")[2], nextFreeID, image.split("/")[2], {});
+				let invEvents = {};
+				if(events.invUpdate !== undefined) invEvents.updated = events.invUpdate;
+				console.log(invEvents);
+				player.inventory[nextFreeID] = new InventoryComponent("images/inventory/" + image.split("/")[2], nextFreeID, image.split("/")[2], invEvents);
 			}
 		}
 	}
@@ -342,6 +402,7 @@
 		this.zoom = zoom;
 		this.facing = facing;
 
+		this.numId = components.length - 1;
 		components[components.length - 1] = this;
 
 		this.update = function(){
