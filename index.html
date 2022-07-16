@@ -67,12 +67,11 @@
 	"start1", "start2", "start3", "window-day", "window-night"];
 
 	// Objects
-	let background = new Component(640, 360, "images/backgrounds/start0", 0, 0, 1, {updated: backgroundCheck});
-	let leftArrow = new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
-	let rightArrow = new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
-	//let pause = new Component(40, 40, "images/ui/pause/pause", 560, 15, 16, {clicked: function(){room.pause()}});
-	let lightWindowCode = new RoomComponent(54, 10, "images/objects/empty", 471, 309, 1, "window-day", 0, {clicked: windowInteract})
-	let darkWindowCode = new RoomComponent(54, 10, "images/objects/empty", 471, 309, 1, "window-night", 0, {clicked: windowInteract})
+	new Component(640, 360, "images/backgrounds/start0", 0, 0, 1, {updated: backgroundCheck});
+	new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
+	new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
+	new RoomComponent(54, 10, "images/objects/empty", 471, 309, 1, "window-day", 0, {clicked: windowInteract})
+	new RoomComponent(54, 10, "images/objects/empty", 471, 309, 1, "window-night", 0, {clicked: windowInteract})
 
 	slotApx = components.length;
 
@@ -85,7 +84,8 @@
 	new RoomComponent(354, 300, "images/objects/empty", 221, 42, 1, "open-dresser", 0, {}); // Open dresser
 	new RoomComponent(213, 300, "images/objects/empty", 221, 42, 1, "dresser", 0, {zoomOn: "open-dresser"}); // Closeup dresser
 	new RoomComponent(100, 100, "images/objects/empty", 200, 200, 1, "", 0, {zoomOn: "dresser"}); // Dresser
-	new RoomComponent(50, 50, "images/objects/clock", 295, 60, 1, "", 2, {zoomOn: "clock"}); // Clock
+	new RoomComponent(50, 50, "images/objects/empty", 295, 60, 1, "", 2, {zoomOn: "clock"}); // Clock
+	const smallClockHandle = new RoomComponent(17, 17, "images/objects/clockHands/smallHand", 314, 79, 1, "", 2, {})
 	new RoomComponent(100, 117, "images/objects/empty", 268, 96, 1, "", 3, {zoomOn: "door"}); // Door
 	new RoomComponent(100, 83, "images/objects/empty", 268, 213, 1, "", 3, {zoomOn: "door-bottom"}); // Door bottom
 	new ItemComponent(55, 33, "images/objects/book", 294, 264, 1, "open-dresser", 0, {}); // Book
@@ -118,14 +118,14 @@
 	new RoomComponent(25, 15, "images/objects/buttons/button-1", 430, 90, 1, "safe", 2, {parameterClicked: safeButton});
 
 	new RoomComponent(640, 360, "images/ui/loading", 0, 0, 1, "never", 0, {});
-	
+
 	let interval;
 
-	// TODO make clock on wall have the hands in the right places
 	let time = 12;
 	function clickedClock(){
 		time = (time % 12) + 1; // Written kind of weird, but just increases time and keeps it 1...12
 		clockHandle.component.frames[0].src = "images/objects/clockHands/hand" + (time - 1) + ".png";
+		smallClockHandle.component.frames[0].src = "images/objects/clockHands/smallHand" + (time - 1) + ".png";
 
 		if(time === 6) {
 			ctx.globalAlpha = .5;
@@ -139,6 +139,7 @@
 
 	function clockHandInit(self){
 		self.frames[0].src = "images/objects/clockHands/hand11.png";
+		smallClockHandle.component.frames[0].src = "images/objects/clockHands/smallHand11.png";
 	}
 
 	function handleBrokenCompass(){
