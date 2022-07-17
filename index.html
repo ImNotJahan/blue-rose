@@ -156,15 +156,16 @@
 	}
 
 	let page = 0;
-	const PAGE_COUNT = 2;
+	const PAGE_COUNT = 4;
 	function flipPage(direction){
+		console.log(pageComponent === undefined);
 		if(pageComponent !== undefined)
 		{
 			page = Math.min(Math.max(0, page + direction), PAGE_COUNT);
-			
+
 			pageComponent.component.frames[0].src = "images/objects/bookPages/page" + page + ".png";
 		} else{
-			clickHeat = 100;
+			handleLectern();
 		}
 	}
 
@@ -288,7 +289,7 @@
 				latch.play();
 				break
 
-			case "5937":
+			case "5973":
 				if(!spawnedCompassNeedle)
 				{
 					new ItemComponent(25, 20, "images/objects/compassNeedle", 270, 292, 1, "openedSafe", 2, {clicked: function () {}});
@@ -308,7 +309,7 @@
 		code += parseInt(buttonId) + 1;
 
 		if(code.length >= 4){
-			if(code === "7805" || code === "5912" || code === "2431") safeSuccess.play();
+			if(code === "7805" || code === "5973" || code === "2431") safeSuccess.play();
 			else{
 				safeFail.play();
 				code = "";
