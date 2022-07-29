@@ -62,6 +62,8 @@
 	let clickHeat = 2;
 	let doorUnlocked = false;
 
+	let scale = 1;
+
 	const backgrounds = ["clock", "desk", "door", "door-bottom", "dresser",
 	"man", "open-dresser", "openedDoor", "openedSafe", "safe", "start0",
 	"start1", "start2", "start3", "window-day", "window-night"];
@@ -70,6 +72,8 @@
 	new Component(640, 360, "images/backgrounds/start0", 0, 0, 1, {updated: backgroundCheck});
 	new Component(40, 40, "images/ui/arrows/left", 40, 160, 4, {clicked: function(){room.look(true)}});
 	new Component(40, 40, "images/ui/arrows/right", 560, 160, 4, {clicked: function(){room.look(false)}});
+	new Component(40, 40, "images/ui/hint/hint", 600, 0, 4, {clicked: hintButton});
+
 	new RoomComponent(54, 10, "images/objects/empty", 471, 309, 1, "window-day", 0, {clicked: windowInteract})
 	new RoomComponent(54, 10, "images/objects/empty", 471, 309, 1, "window-night", 0, {clicked: windowInteract})
 
@@ -121,6 +125,8 @@
 
 	new RoomComponent(25, 15, "images/objects/buttons/button-1", 430, 90, 1, "safe", 2, {parameterClicked: safeButton});
 
+	new Component(640, 360, "images/backgrounds/hints/start0", 0, 0, 1, {updated: hintBackground});
+
 	new RoomComponent(640, 360, "images/ui/loading", 0, 0, 1, "never", 0, {});
 
 	let interval;
@@ -138,6 +144,28 @@
 		else if(time === 7) {
 			ctx.globalAlpha = 1;
 			// add lightswitch up noise
+		}
+	}
+
+	let lookingAtHint = false;
+	function hintButton(){
+		lookingAtHint = !lookingAtHint;
+	}
+
+	const availableHints = ["", "clock", "desk", "door", "door-bottom", "window-day", "window-night", "lectern"];
+	function hintBackground(component){
+		if(lookingAtHint){
+			if(availableHints.includes(room.zoom)){
+				if(room.zoom !== ""){
+					component.frames[0].src = "images/backgrounds/hints/" + room.zoom + 0 + ".png";
+				} else component.frames[0].src = "images/backgrounds/hints/start" + room.facing + 0 + ".png";
+			} else{
+				component.frames[0].src = "images/backgrounds/hints/blank" + 0 + ".png";
+			}
+
+			component.visible = true;
+		} else{
+			component.visible = false;
 		}
 	}
 
@@ -474,12 +502,14 @@
 
 		this.wasClicked = false;
 
+		this.visible = true;
+
 		components[components.length] = this;
 
 		if(this.events.init !== undefined) this.events.init(this);
 
 		this.update = function() {
-			ctx.drawImage(this.frames[mod(frame, frameCount)], this.x, this.y, this.width, this.height);
+			this.draw();
 
 			this.wasClicked = false;
 
@@ -487,11 +517,11 @@
 				let mx = mousePosition.x;
 				let my = mousePosition.y;
 
-				let ox = this.x;
-				let oy = this.y;
+				let ox = this.x * scale;
+				let oy = this.y * scale;
 
-				let ow = this.width;
-				let oh = this.height;
+				let ow = this.width * scale;
+				let oh = this.height * scale;
 
 				if(mx > ox && mx < ox + ow && my > oy && my < oy + oh){
 					if(this.events.zoomOn !== undefined) room.zoom = this.events.zoomOn;
@@ -505,6 +535,15 @@
 
 			if(this.events.updated !== undefined) this.events.updated(this);
 		}
+
+		this.draw = function(){
+			if(this.visible) {
+				ctx.drawImage(this.frames[mod(frame, frameCount)],
+						this.x * scale, this.y * scale,
+						this.width * scale, this.height * scale);
+			}
+
+		}
 	}
 
 	function hasClickEvent(events){
@@ -512,6 +551,12 @@
 		if(events.parameterClicked !== undefined) return true;
 		if(events.zoomOn !== undefined) return true;
 	}
+
+	/*window.addEventListener('resize', function(){
+		scale = window.innerWidth / 640;
+		canvas.style.width = scale * 640 + "px";
+		canvas.style.height = scale * 360 + "px";
+	});*/
 
 	function Sound(src) {
 		this.sound = document.createElement("audio");
